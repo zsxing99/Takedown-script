@@ -1,4 +1,6 @@
 # main control file
+import takedown
+
 
 def main():
     print("hello, this is take down script init")
@@ -6,4 +8,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
