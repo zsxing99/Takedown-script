@@ -1,9 +1,11 @@
 # main control file
-import takedown
+from takedown.sites.GitHub import GitHubClient
 
 
 def main():
-    print("hello, this is take down script init")
+    # test only
+    g = GitHubClient()
+    g.search("react", "code")
 
 
 if __name__ == '__main__':
