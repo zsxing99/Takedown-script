@@ -3,7 +3,7 @@ GitHub implement of BaseSite
 ---------------------------
 GitHub search restful API docs: https://docs.github.com/en/free-pro-team@latest/rest/reference/search
 """
-from .BaseSite import BaseSite
+from .BaseSite import BaseSite, SiteResult
 from requests import Session, Request
 import sys
 
@@ -63,6 +63,7 @@ class GitHubClient(BaseSite):
             return None
 
         session = Session()
+        results = None
         # a very basic implementation of one API file content
         if search_option == "code":
             params = {
@@ -100,15 +101,15 @@ class GitHubClient(BaseSite):
                 .prepare()
             res = session.send(req)
             if res.status_code == 200:
-                print('Success')
+                results = CodeSearchResult(res.json())
             else:
                 print(res.json(), file=sys.stderr)
         elif search_option == "commits":
             params = {
-                    'page': 1,
-                    'per_page': 100,
-                    'q': source
-                }
+                'page': 1,
+                'per_page': 100,
+                'q': source
+            }
             headers = {
                 'accept': 'application/vnd.github.v3+json',
                 'user-agent': 'python'
@@ -133,3 +134,36 @@ class GitHubClient(BaseSite):
             print("search option error", file=sys.stderr)
         # clean up
         session.close()
+        return results
+
+
+class Item:
+    def __init__(self):
+        pass
+
+
+class CodeSearchResult(SiteResult):
+
+    def __init__(self, json, **config):
+        super().__init__(**config)
+        self.__raw_results = json
+        self.__items = self.__process()
+
+    def __process(self):
+        items = []
+        raw_items = self.__raw_results["items"]
+        for raw_item in raw_items:
+            item = Item()
+            repo = raw_item.pop("repository")
+            owner = repo.pop("owner")
+            for k, v in raw_item.items():
+                item.__setattr__('file__' + k, v)
+            for k, v in repo.items():
+                item.__setattr__('repo__' + k, v)
+            for k, v in owner.items():
+                item.__setattr__('owner__' + k, v)
+            items.append(item)
+        return items
+
+    def generate_list(self, **config):
+        print("".join(map(lambda x: "{}\n".format(x.owner__login), self.__items)))
