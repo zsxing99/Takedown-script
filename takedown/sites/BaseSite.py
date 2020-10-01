@@ -19,3 +19,10 @@ class BaseSite(ABC):
     def search(self, source, category, ):
         pass
 
+
+class SiteResult(ABC):
+
+    @abstractmethod
+    def __init__(self, **config):
+        pass
+
