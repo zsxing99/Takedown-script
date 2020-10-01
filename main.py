@@ -5,7 +5,7 @@ from takedown.sites.GitHub import GitHubClient
 def main():
     # test only
     g = GitHubClient()
-    g.search("react", "commits", )
+    g.authenticate("").search("react", "code", )
 
 
 if __name__ == '__main__':

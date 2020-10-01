@@ -12,11 +12,11 @@ class BaseSite(ABC):
         pass
 
     @abstractmethod
-    def authenticate(self, username, password, ):
+    def authenticate(self, **config):
         pass
 
     @abstractmethod
-    def search(self, source, category, ):
+    def search(self, **config):
         pass
 
 
@@ -24,5 +24,9 @@ class SiteResult(ABC):
 
     @abstractmethod
     def __init__(self, **config):
+        pass
+
+    @abstractmethod
+    def generate_list(self, **config):
         pass
 
