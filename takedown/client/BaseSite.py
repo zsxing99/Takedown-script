@@ -1,5 +1,5 @@
 """
-Abstraction of sites that will be searched
+Abstraction of client that will be searched
 """
 
 from abc import ABC, abstractmethod

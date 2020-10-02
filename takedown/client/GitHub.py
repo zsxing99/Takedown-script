@@ -5,6 +5,7 @@ GitHub search restful API docs: https://docs.github.com/en/free-pro-team@latest/
 """
 from .BaseSite import BaseSite, SiteResult
 from requests import Session, Request
+import typing
 import sys
 
 
@@ -46,12 +47,12 @@ class GitHubClient(BaseSite):
                , **other_options):
         """
         main function for searching
-        :param target_type:
-        :param target:
-        :param source:
-        :param search_option:
-        :param n_threads:
-        :return:
+        :param target_type: 'user' | 'repo' | 'org'
+        :param target: the target of target_type
+        :param source: search string
+        :param search_option: 'code' | 'commits'
+        :param n_threads: not implemented
+        :return: None | CodeSearchResult
         """
         # sanity checks
         if not search_option or search_option not in self.__search_options:
@@ -59,7 +60,7 @@ class GitHubClient(BaseSite):
             return None
 
         if not source or len(source.strip()) == 0:
-            print("Missing a valid search input", file=sys.stderr)
+            print("Missing a valid search controller", file=sys.stderr)
             return None
 
         session = Session()
@@ -139,7 +140,16 @@ class GitHubClient(BaseSite):
 
 class Item:
     def __init__(self):
-        pass
+        self.__fields = {}
+
+    def store(self, key, value):
+        self.__fields[key] = value
+
+    def get(self, key):
+        return self.__fields[key]
+
+    def fields(self):
+        return self.__fields.keys()
 
 
 class CodeSearchResult(SiteResult):
@@ -157,13 +167,25 @@ class CodeSearchResult(SiteResult):
             repo = raw_item.pop("repository")
             owner = repo.pop("owner")
             for k, v in raw_item.items():
-                item.__setattr__('file__' + k, v)
+                item.store('file__' + k, v)
             for k, v in repo.items():
-                item.__setattr__('repo__' + k, v)
+                item.store('repo__' + k, v)
             for k, v in owner.items():
-                item.__setattr__('owner__' + k, v)
+                item.store('owner__' + k, v)
             items.append(item)
         return items
 
-    def generate_list(self, **config):
-        print("".join(map(lambda x: "{}\n".format(x.owner__login), self.__items)))
+    def generate_list(self, fields: typing.Union[str, typing.Iterable] = "owner__login", **config):
+        if isinstance(fields, str):
+            print("".join(map(lambda i: "{}\n".format(i.get(fields)), self.__items)))
+        else:
+            for item in self.__items:
+                print(" ".join([item.get(field) for field in fields]))
+
+    def get_fields(self):
+        fields = set()
+        for item in self.__items:
+            fields.update(item.fields())
+
+        return fields
+
