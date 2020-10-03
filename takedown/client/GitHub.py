@@ -64,6 +64,7 @@ class GitHubClient(BaseSite):
             return None
 
         session = Session()
+        source = source.replace(" ", "+")
         results = None
         # a very basic implementation of one API file content
         if search_option == "code":
@@ -112,7 +113,7 @@ class GitHubClient(BaseSite):
                 'q': source
             }
             headers = {
-                'accept': 'application/vnd.github.v3+json',
+                'accept': 'application/vnd.github.cloak-preview+json',
                 'user-agent': 'python'
             }
             if self.__is_authenticated:
@@ -128,7 +129,7 @@ class GitHubClient(BaseSite):
                 .prepare()
             res = session.send(req)
             if res.status_code == 200:
-                print('Success')
+                results = CommitSearchResult(res.json())
             else:
                 print(res.json(), file=sys.stderr)
         else:
@@ -176,6 +177,12 @@ class CodeSearchResult(SiteResult):
         return items
 
     def generate_list(self, fields: typing.Union[str, typing.Iterable] = "owner__login", **config):
+        """
+        generate the list of output returned by GitHub
+        :param fields: list | string, see get_fields()
+        :param config:
+        :return:
+        """
         if isinstance(fields, str):
             print("".join(map(lambda i: "{}\n".format(i.get(fields)), self.__items)))
         else:
@@ -183,9 +190,57 @@ class CodeSearchResult(SiteResult):
                 print(" ".join([item.get(field) for field in fields]))
 
     def get_fields(self):
-        fields = set()
-        for item in self.__items:
-            fields.update(item.fields())
+        """
+        get all available fields that can be accessed
+        :return:
+        """
 
-        return fields
+        return set() if len(self.__items) == 0 else self.__items[0].fields()
 
+
+class CommitSearchResult(SiteResult):
+
+    def __init__(self, json, **config):
+        super().__init__(**config)
+        self.__raw_results = json
+        self.__items = self.__process()
+
+    def __process(self):
+        items = []
+        raw_items = self.__raw_results["items"]
+        for raw_item in raw_items:
+            item = Item()
+            author = raw_item.pop("author")
+            committer = raw_item.pop("committer")
+            repo = raw_item.pop("repository")
+            for k, v in raw_item.items():
+                item.store('commit__' + k, v)
+            for k, v in repo.items():
+                item.store('repo__' + k, v)
+            for k, v in author.items():
+                item.store('author__' + k, v)
+            for k, v in committer.items():
+                item.store('committer__' + k, v)
+            items.append(item)
+        return items
+
+    def generate_list(self, fields: typing.Union[str, typing.Iterable] = "owner__login", **config):
+        """
+        generate the list of output returned by GitHub
+        :param fields: list | string, see get_fields()
+        :param config:
+        :return:
+        """
+        if isinstance(fields, str):
+            print("".join(map(lambda i: "{}\n".format(i.get(fields)), self.__items)))
+        else:
+            for item in self.__items:
+                print(" ".join([item.get(field) for field in fields]))
+
+    def get_fields(self):
+        """
+        get all available fields that can be accessed
+        :return:
+        """
+
+        return set() if len(self.__items) == 0 else self.__items[0].fields()
