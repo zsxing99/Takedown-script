@@ -16,14 +16,16 @@ pip install -r requirements.txt
 And all dependencies will be added. Of course you should have `pip` installed.
 
 ### Usage
-There are both a simple script provided called `main.py` and the entire package.
+There are a simple starter script provided called `main.py` and the entire package.
 
 #### script
 On command line, run:
 ```
 python main.py your_search_pattern your_GitHub_personal_token
 ```
-As noted, the script is very simple. There are not too much options for now.
+As noted, the script is very simple. It is only a starter script.
+
+There aren't too much options for now, but might be extended.
 
 #### package
 There are only GitHub TakeDown implemented now, so here's a sample for you
@@ -50,6 +52,6 @@ To get a personal token(free), check
 this [tutorial](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token).
 
 The implementation only returns the list of max 100 search results. It is very uncommon 
-that will be more than 50 repos or codes result that 
-match a specific pattern. Your search is either too broader(so narrow the search down), or your
+that will be more than 50 repos or codes results that 
+match a very specific pattern. Your search is either too broader(so narrow the search down), or your
 work is entirely leaked. I might consider raise the limit in the future.
