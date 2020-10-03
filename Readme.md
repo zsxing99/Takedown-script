@@ -13,28 +13,32 @@ A `requirements.txt` is provided, so simply run:
 ```
 pip install -r requirements.txt
 ```
-And all dependencies will be added. Of course you should have `pip` installed.
+So all dependencies will be added. Of course you should have `pip` installed.
 
 ### Usage
-There are a simple starter script provided called `main.py` and the entire package.
+There are a simple starter script provided called `main.py` and the entire package called `takedown`.
 
 #### script
 On command line, run:
 ```
 python main.py your_search_pattern your_GitHub_personal_token
 ```
-As noted, the script is very simple. It is only a starter script.
+As noted, the script is very simple. It is only a starter script. You can customize your own by using
+the `takedown` package.
 
-There aren't too much options for now, but might be extended.
+There aren't too much options the script provides for now, but might be extended.
 
 #### package
-There are only GitHub TakeDown implemented now, so here's a sample for you
+There are only GitHub TakeDown implemented now, so here's a piece of sample for you.
 
-```
+```python
 from takedown.client.GitHub import GitHubClient
 
 client = GitHubClient()
+# authenticate and search
+# you can choose not to authenticate, but limitations apply. check docs for details
 results = client.authenticate("Your personal GitHub token").search("this is awesome", "code", )
+# check fields options that can be used for list generation
 print(results.get_fields())
 results.generate_list(['owner__login', 'owner__html_url'])
 ```
