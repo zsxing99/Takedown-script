@@ -57,5 +57,5 @@ this [tutorial](https://docs.github.com/en/free-pro-team@latest/github/authentic
 
 The implementation only returns the list of max 100 search results. It is very uncommon 
 that will be more than 50 repos or codes results that 
-match a very specific pattern. Your search is either too broader(so narrow the search down), or your
-work is entirely leaked. I might consider raise the limit in the future.
+match a very specific pattern. Your search is either too broad(so narrow the search down), or your
+work is entirely leaked. Limits might be raised in the future.
