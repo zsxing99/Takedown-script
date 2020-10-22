@@ -22,7 +22,7 @@ class GitHubClient(BaseSite):
         self.__search_options = {
             'code': '/search/code',
             'commits': '/search/commits',
-            # 'repositories': '/search/repositories'
+            'repo': '/search/repositories'
         }
         self.__target_type = {
             'user': 'user:',
@@ -69,7 +69,7 @@ class GitHubClient(BaseSite):
         # a very basic implementation of one API file content
         if search_option == "code":
             params = {
-                'page': 1,
+                'page': other_options.get('page', 1),
                 'per_page': 100,
                 'q': source
             }
@@ -90,7 +90,7 @@ class GitHubClient(BaseSite):
                     session.close()
                     return None
                 params = {
-                    'page': 1,
+                    'page': other_options.get('page', 1),
                     'per_page': 100,
                     'q': source + '+in:file+' + self.__target_type[target_type] + target
                 }
@@ -108,7 +108,7 @@ class GitHubClient(BaseSite):
                 print(res.json(), file=sys.stderr)
         elif search_option == "commits":
             params = {
-                'page': 1,
+                'page': other_options.get('page', 1),
                 'per_page': 100,
                 'q': source
             }
@@ -130,6 +130,45 @@ class GitHubClient(BaseSite):
             res = session.send(req)
             if res.status_code == 200:
                 results = CommitSearchResult(res.json())
+            else:
+                print(res.json(), file=sys.stderr)
+        elif search_option == "repo":
+            params = {
+                'page': other_options.get('page', 1),
+                'per_page': 100,
+                'q': source
+            }
+            headers = {
+                'accept': 'application/vnd.github.v3+json',
+                'user-agent': 'python'
+            }
+            if self.__is_authenticated:
+                headers['Authorization'] = "token {}".format(self.__OAuth_token)
+                if target and target_type and target in target_type:
+                    params['q'] += '+' + self.__target_type[target_type] + target
+            else:
+                print("Note that code search is unable to search the entire GitHub according to the provided "
+                      "APIs unless a token is provided through function authenticate()")
+                if not target or not target_type or target_type not in self.__target_type:
+                    print("Missing a target and a target type for code searching when no token is provided",
+                          file=sys.stderr)
+                    session.close()
+                    return None
+                params = {
+                    'page': other_options.get('page', 1),
+                    'per_page': 100,
+                    'q': source + '+in:file+' + self.__target_type[target_type] + target
+                }
+            req = Request(
+                method="get",
+                url=self.base_url + self.__search_options[search_option],
+                params="&".join("%s=%s" % (k, v) for k, v in params.items()),
+                headers=headers
+            ) \
+                .prepare()
+            res = session.send(req)
+            if res.status_code == 200:
+                results = RepoSearchResult(res.json())
             else:
                 print(res.json(), file=sys.stderr)
         else:
@@ -159,6 +198,8 @@ class CodeSearchResult(SiteResult):
         super().__init__(**config)
         self.__raw_results = json
         self.__items = self.__process()
+        self.total = json["total_count"]
+        self.completed = json["incomplete_results"]
 
     def __process(self):
         items = []
@@ -176,7 +217,7 @@ class CodeSearchResult(SiteResult):
             items.append(item)
         return items
 
-    def generate_list(self, fields: typing.Union[str, typing.Iterable] = "owner__login", **config):
+    def print_list(self, fields: typing.Union[str, typing.Iterable] = "owner__login", **config):
         """
         generate the list of output returned by GitHub
         :param fields: list | string, see get_fields()
@@ -189,7 +230,18 @@ class CodeSearchResult(SiteResult):
             for item in self.__items:
                 print(" ".join([item.get(field) for field in fields]))
 
-    def get_fields(self):
+    def generate_list(self, fields: typing.Union[str, typing.Iterable] = "owner__login", **config) -> list:
+        res = []
+        if isinstance(fields, str):
+            res = map(lambda i: i.get(fields), self.__items)
+        else:
+            for item in self.__items:
+                res.append({
+                    field: item.get(field) for field in fields
+                })
+        return res
+
+    def get_fields(self) -> set:
         """
         get all available fields that can be accessed
         :return:
@@ -204,6 +256,8 @@ class CommitSearchResult(SiteResult):
         super().__init__(**config)
         self.__raw_results = json
         self.__items = self.__process()
+        self.total = json["total_count"]
+        self.completed = json["incomplete_results"]
 
     def __process(self):
         items = []
@@ -224,7 +278,7 @@ class CommitSearchResult(SiteResult):
             items.append(item)
         return items
 
-    def generate_list(self, fields: typing.Union[str, typing.Iterable] = "owner__login", **config):
+    def print_list(self, fields: typing.Union[str, typing.Iterable] = "owner__login", **config) -> None:
         """
         generate the list of output returned by GitHub
         :param fields: list | string, see get_fields()
@@ -237,7 +291,73 @@ class CommitSearchResult(SiteResult):
             for item in self.__items:
                 print(" ".join([item.get(field) for field in fields]))
 
-    def get_fields(self):
+    def generate_list(self, fields: typing.Union[str, typing.Iterable] = "owner__login", **config) -> []:
+        res = []
+        if isinstance(fields, str):
+            res = map(lambda i: i.get(fields), self.__items)
+        else:
+            for item in self.__items:
+                res.append({
+                    field: item.get(field) for field in fields
+                })
+        return res
+
+    def get_fields(self) -> set:
+        """
+        get all available fields that can be accessed
+        :return:
+        """
+
+        return set() if len(self.__items) == 0 else self.__items[0].fields()
+
+
+class RepoSearchResult(SiteResult):
+
+    def __init__(self, json, **config):
+        super().__init__(**config)
+        self.__raw_results = json
+        self.__items = self.__process()
+        self.total = json["total_count"]
+        self.completed = json["incomplete_results"]
+
+    def __process(self):
+        items = []
+        raw_items = self.__raw_results["items"]
+        for raw_item in raw_items:
+            item = Item()
+            owner = raw_item.pop("owner")
+            for k, v in raw_item.items():
+                item.store('repo__' + k, v)
+            for k, v in owner.items():
+                item.store('owner__' + k, v)
+            items.append(item)
+        return items
+
+    def print_list(self, fields: typing.Union[str, typing.Iterable] = "owner__login", **config) -> None:
+        """
+        generate the list of output returned by GitHub
+        :param fields: list | string, see get_fields()
+        :param config:
+        :return:
+        """
+        if isinstance(fields, str):
+            print("".join(map(lambda i: "{}\n".format(i.get(fields)), self.__items)))
+        else:
+            for item in self.__items:
+                print(" ".join([item.get(field) for field in fields]))
+
+    def generate_list(self, fields: typing.Union[str, typing.Iterable] = "owner__login", **config) -> []:
+        res = []
+        if isinstance(fields, str):
+            res = map(lambda i: i.get(fields), self.__items)
+        else:
+            for item in self.__items:
+                res.append({
+                    field: item.get(field) for field in fields
+                })
+        return res
+
+    def get_fields(self) -> set:
         """
         get all available fields that can be accessed
         :return:

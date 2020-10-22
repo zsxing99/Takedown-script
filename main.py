@@ -1,6 +1,6 @@
 # main control file
 # very simple script
-from takedown.client.GitHub import GitHubClient
+from takedown.task.FindRepoTask import FindRepoTask
 import sys
 
 
@@ -9,11 +9,8 @@ def main():
     if len(options) < 2:
         print("Usage: python main.py your_search_pattern your_GitHub_token", file=sys.stderr)
 
-    client = GitHubClient()
-    results = client.authenticate(options[1]).search(options[0], "code", )
-    if not results:
-        return
-    results.generate_list()
+    task = FindRepoTask()
+    print(task.prepare(options[1], options[0]).execute_search_by_repo().head())
 
 
 if __name__ == '__main__':
