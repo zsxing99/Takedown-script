@@ -7,6 +7,7 @@ It returns the targets with a set of usernames.
 ```
 python >= 3.8
 requests~=2.23.0
+pandas~=1.0.3
 ```
 
 A `requirements.txt` is provided, so simply run:
