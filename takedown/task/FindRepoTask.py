@@ -4,11 +4,12 @@ FindRepoTask
 Run tool to find repos that should be taken down
     1. Tool should group repos by owner, if one owner has multiple repos in violation
     2. Newly found repos are tagged as “new”
+--------------------------------------------------
+execution result will be an array of dict
 """
 
 from .BaseTask import BaseTask
 from takedown.client.GitHub import GitHubClient
-import pandas as pd
 import sys
 import requests
 import datetime
@@ -25,8 +26,10 @@ class FindRepoTask(BaseTask):
         self.search_query = ""
         self.file_type = 'csv'
         self.previous_records = None
+        # save rate limit and bandwidth with GitHub requests, cache user_info
+        self.cached_user_info = {}
 
-    def prepare(self, token: str, search_query: str, file_type: str = None, previous_records: pd.DataFrame = None):
+    def prepare(self, token: str, search_query: str, file_type: str = None, previous_records: dict = None):
         """
         prepare the task
         :param token: input github token
@@ -42,7 +45,16 @@ class FindRepoTask(BaseTask):
         if file_type:
             self.file_type = file_type
         if previous_records:
-            self.previous_records = previous_records
+            # cache username and corresponding repo
+            users_list = previous_records["results"]
+            previous_records_cache = {}
+            for user in users_list:
+                repos = user.pop("repos")
+                user["repos"] = {
+                    repo["repo__name"]: repo for repo in repos
+                }
+                previous_records_cache[user["owner__username"]] = user
+            self.previous_records = previous_records_cache
         return self
 
     def __pre_check__(self, ignore_warning: bool = False):
@@ -67,7 +79,7 @@ class FindRepoTask(BaseTask):
             return False
         return True
 
-    def execute_search_by_code(self, ignore_warning: bool = False):
+    def execute_search_by_code(self, ignore_warning: bool = False, chain: bool = False):
         """
         search by code
         :param ignore_warning:
@@ -103,56 +115,103 @@ class FindRepoTask(BaseTask):
                 "owner__url", "repo__name", "repo__html_url",
             ]), *fields_filtered_results]
             code_search_result = self.client.search(self.search_query, "code", page=page)
+            if not code_search_result:
+                print("Error in search with GitHub rest APIs", file=sys.stderr)
+                return None
             page += 1
         fields_filtered_results = [*code_search_result.generate_list([
             "owner__url", "owner__html_url", "repo__name", "repo__html_url",
         ]), *fields_filtered_results]
 
         processed_results = []
-        # process result
-        for result in fields_filtered_results:
-            res = requests.get(result["owner__url"], headers={
-                'user-agent': 'python',
-                'Authorization': "token {}".format(self.__token)
-            }).json()
-            processed_results.append({
-                **result,
-                "owner__email": res.get("email", None),
-                "owner__name": res.get("name", None),
-                "owner__username": res.get("login", None)
-            })
-
-        # if provided with an older pd.Dataframe
-        previous_records_map = None  # store the mapping info as username to a set of repo names
-        if self.previous_records:
-            previous_records_map = {}
-            for index, row in self.previous_records.iterrows():
-                if row["owner__username"] in previous_records_map:
-                    previous_records_map[row["owner__username"]].add(row["repo__name"])
-                else:
-                    previous_records_map[row["owner__username"]] = {row["repo__name"]}
-
-        columns = ["owner__username", "owner__name", "owner__email", "owner__html_url", "repo__name", "repo__html_url",
-                   "status", "latest_detected_date"]
-        results_df = pd.DataFrame(columns=columns)
+        # cache repeated user info to save request rate
+        cached_user_info = self.cached_user_info
+        # cache repo html url to ensure each result is unique after processing
         repo_set = set()
-        for result in processed_results:
-            if result["repo__html_url"] in repo_set:
-                continue
-            else:
+        # process result by adding user info
+        for result in fields_filtered_results:
+            if result["repo__html_url"] not in repo_set:
+                res = cached_user_info.get(result["owner__url"], None)
+                if not res:
+                    res = requests.get(result["owner__url"], headers={
+                        'user-agent': 'python',
+                        'Authorization': "token {}".format(self.__token)
+                    }).json()
+                    cached_user_info[result["owner__url"]] = res
+                processed_results.append({
+                    **result,
+                    "owner__email": res.get("email", None),
+                    "owner__name": res.get("name", None),
+                    "owner__username": res.get("login", None),
+                    "owner__html_url": res.get("owner__html_url", None)
+                })
                 repo_set.add(result["repo__html_url"])
-            status = "New"
-            if previous_records_map:
-                if result["owner__username"] in previous_records_map and result["repo__name"] in \
-                        previous_records_map[result["owner__username"]]:
-                    status = "Re-detected"
-            result["status"] = status
-            result["latest_detected_date"] = datetime.datetime.now()
-            results_df.loc[len(results_df)] = [result[key] for key in columns]
 
-        return results_df
+        final_result_dict = {}
+        for result in processed_results:
+            if result["owner__username"] in final_result_dict:
+                repos = final_result_dict[result["owner__username"]]["repos"]
+                # if repo already exist
+                if result["repo__name"] in repos:
+                    repos[result["repo__name"]]["status"] = "Re-detected"
+                    repos[result["repo__name"]]["latest_detected_date"] = datetime.datetime.now()
+                else:
+                    repos[result["repo__name"]] = {
+                        "repo__name": result["repo__name"],
+                        "repo__html_url": result["repo__html_url"],
+                        "status": "New",
+                        "latest_detected_date": datetime.datetime.now()
+                    }
+            elif self.previous_records and result["owner__username"] in self.previous_records:
+                previous_record = self.previous_records[result["owner__username"]]
+                repos = previous_record["repos"]
+                # if repo already exist
+                if result["repo__name"] in repos:
+                    repos[result["repo__name"]]["status"] = "Re-detected"
+                    repos[result["repo__name"]]["latest_detected_date"] = datetime.datetime.now()
+                else:
+                    repos[result["repo__name"]] = {
+                        "repo__name": result["repo__name"],
+                        "repo__html_url": result["repo__html_url"],
+                        "status": "New",
+                        "latest_detected_date": datetime.datetime.now()
+                    }
+                final_result_dict[result["owner__username"]] = previous_record
+            else:
+                final_result_dict[result["owner__username"]] = {
+                    "owner__username": result["owner__username"],
+                    "owner__name": result["owner__name"],
+                    "owner__email": [result["owner__email"]],
+                    "owner__html_url": result["owner__html_url"],
+                    "repos": {
+                        result["repo__name"]: {
+                            "repo__name": result["repo__name"],
+                            "repo__html_url": result["repo__html_url"],
+                            "status": "New",
+                            "latest_detected_date": datetime.datetime.now()
+                        }
+                    }
+                }
+        if chain:
+            return final_result_dict
 
-    def execute_search_by_repo(self, ignore_warning: bool = False):
+        final_result = {
+            "results": []
+        }
+        for user in final_result_dict.values():
+            repos = user.pop("repos")
+            final_result["results"].append(
+                {
+                    **user,
+                    "repos": [
+                        {**repo_info} for repo_info in repos.values()
+                    ]
+                }
+            )
+
+        return final_result
+
+    def execute_search_by_repo(self, ignore_warning: bool = False, chain: bool = False):
         """
         search by code
         :param ignore_warning:
@@ -188,51 +247,96 @@ class FindRepoTask(BaseTask):
                 "owner__url", "repo__name", "repo__html_url",
             ]), *fields_filtered_results]
             code_search_result = self.client.search(self.search_query, "repo", page=page)
+            if not code_search_result:
+                print("Error in search with GitHub rest APIs", file=sys.stderr)
+                return None
             page += 1
         fields_filtered_results = [*code_search_result.generate_list([
             "owner__url", "owner__html_url", "repo__name", "repo__html_url",
         ]), *fields_filtered_results]
 
         processed_results = []
-        # process result
+        # cache repeated user info to save request rate
+        # repo results are unique returned by GitHub
+        cached_user_info = self.cached_user_info
+        # cache repo html url to ensure each result is unique after processing
         for result in fields_filtered_results:
-            res = requests.get(result["owner__url"], headers={
-                'user-agent': 'python',
-                'Authorization': "token {}".format(self.__token)
-            }).json()
+            res = cached_user_info.get(result["owner__url"], None)
+            if not res:
+                res = requests.get(result["owner__url"], headers={
+                    'user-agent': 'python',
+                    'Authorization': "token {}".format(self.__token)
+                }).json()
             processed_results.append({
                 **result,
                 "owner__email": res.get("email", None),
                 "owner__name": res.get("name", None),
-                "owner__username": res.get("login", None)
+                "owner__username": res.get("login", None),
+                "owner__html_url": res.get("owner__html_url", None)
             })
 
-        # if provided with an older pd.Dataframe
-        previous_records_map = None  # store the mapping info as username to a set of repo names
-        if self.previous_records:
-            previous_records_map = {}
-            for index, row in self.previous_records.iterrows():
-                if row["owner__username"] in previous_records_map:
-                    previous_records_map[row["owner__username"]].add(row["repo__name"])
-                else:
-                    previous_records_map[row["owner__username"]] = {row["repo__name"]}
-
-        columns = ["owner__username", "owner__name", "owner__email", "owner__html_url", "repo__name", "repo__html_url",
-                   "status", "latest_detected_date"]
-        results_df = pd.DataFrame(columns=columns)
-        repo_set = set()
+        final_result_dict = {}
         for result in processed_results:
-            if result["repo__html_url"] in repo_set:
-                continue
+            if result["owner__username"] in final_result_dict:
+                repos = final_result_dict[result["owner__username"]]["repos"]
+                # if repo already exist
+                if result["repo__name"] in repos:
+                    repos[result["repo__name"]]["status"] = "Re-detected"
+                    repos[result["repo__name"]]["latest_detected_date"] = datetime.datetime.now()
+                else:
+                    repos[result["repo__name"]] = {
+                        "repo__name": result["repo__name"],
+                        "repo__html_url": result["repo__html_url"],
+                        "status": "New",
+                        "latest_detected_date": datetime.datetime.now()
+                    }
+            elif self.previous_records and result["owner__username"] in self.previous_records:
+                previous_record = self.previous_records[result["owner__username"]]
+                repos = previous_record["repos"]
+                # if repo already exist
+                if result["repo__name"] in repos:
+                    repos[result["repo__name"]]["status"] = "Re-detected"
+                    repos[result["repo__name"]]["latest_detected_date"] = datetime.datetime.now()
+                else:
+                    repos[result["repo__name"]] = {
+                        "repo__name": result["repo__name"],
+                        "repo__html_url": result["repo__html_url"],
+                        "status": "New",
+                        "latest_detected_date": datetime.datetime.now()
+                    }
+                final_result_dict[result["owner__username"]] = previous_record
             else:
-                repo_set.add(result["repo__html_url"])
-            status = "New"
-            if previous_records_map:
-                if result["owner__username"] in previous_records_map and result["repo__name"] in \
-                        previous_records_map[result["owner__username"]]:
-                    status = "Re-detected"
-            result["status"] = status
-            result["latest_detected_date"] = datetime.datetime.now()
-            results_df.loc[len(results_df)] = [result[key] for key in columns]
+                final_result_dict[result["owner__username"]] = {
+                    "owner__username": result["owner__username"],
+                    "owner__name": result["owner__name"],
+                    "owner__email": [result["owner__email"]],
+                    "owner__html_url": result["owner__html_url"],
+                    "repos": {
+                        result["repo__name"]: {
+                            "repo__name": result["repo__name"],
+                            "repo__html_url": result["repo__html_url"],
+                            "status": "New",
+                            "latest_detected_date": datetime.datetime.now()
+                        }
+                    }
+                }
 
-        return results_df
+        if chain:
+            return final_result_dict
+
+        final_result = {
+            "results": []
+        }
+        for user in final_result_dict.values():
+            repos = user.pop("repos")
+            final_result["results"].append(
+                {
+                    **user,
+                    "repos": [
+                        {**repo_info} for repo_info in repos.values()
+                    ]
+                }
+            )
+
+        return final_result
+
