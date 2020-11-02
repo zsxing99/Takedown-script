@@ -4,8 +4,6 @@ FindRepoTask
 Run tool to find repos that should be taken down
     1. Tool should group repos by owner, if one owner has multiple repos in violation
     2. Newly found repos are tagged as “new”
---------------------------------------------------
-execution result will be an array of dict
 """
 
 from .BaseTask import BaseTask
