@@ -33,6 +33,7 @@ class InputReader:
         Command validator and parser for "takedown find"
         :return:
         """
+        self.command_type = ""
         pass
 
     def __command_send(self):
@@ -54,3 +55,4 @@ class InputReader:
         it will be executed only no error in prepare
         :return: return a dict as the { param : key }
         """
+        pass

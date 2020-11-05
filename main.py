@@ -10,7 +10,7 @@ def main():
         print("Usage: python main.py your_search_pattern your_GitHub_token", file=sys.stderr)
 
     task = FindRepoTask()
-    print(task.prepare(options[1], options[0]).execute_search_by_repo())
+    print(task.prepare(options[1], options[0]).execute_search_by_code())
 
 
 if __name__ == '__main__':
