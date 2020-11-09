@@ -28,8 +28,9 @@ def load_previous_outputs_as_inputs(file_paths: list) -> dict:
                 print("{} successfully loaded as json file.".format(file_path))
             except json.JSONDecodeError:
                 data = None
-        if not data:
+        if not data or not isinstance(data, dict):
             print("Loading {} failed both in yaml and json. Skipped.".format(file_path))
+            input_stream.close()
             continue
         input_stream.close()
 
@@ -54,8 +55,12 @@ def load_previous_outputs_as_inputs(file_paths: list) -> dict:
                         }
             else:
                 previous_records[user_dict["owner__username"]] = {
-                    repo_object["repo__name"]: {**repo_object} for repo_object in user_dict["repos"]
+                    **user_dict,
+                    "repos": {
+                        repo_object["repo__name"]: {**repo_object} for repo_object in user_dict["repos"]
+                    }
                 }
 
+    print("Inputs loading finished.")
     return previous_records
 
