@@ -60,7 +60,7 @@ class InputReader:
         else:
             self.required_inputs["search_query"] = self.raw_input[2]
             self.required_inputs["GitHub_token"] = self.raw_input[3]
-            print("checked required parameters")
+            print("Checked required parameters.")
 
         # keep reading optional parameters
         length = len(self.raw_input)
@@ -116,7 +116,7 @@ class InputReader:
                 continue
             curr += 2
 
-        print("checked optional parameters")
+        print("Checked optional parameters.")
         return True
 
     def __command_send(self):
