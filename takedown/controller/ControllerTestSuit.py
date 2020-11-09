@@ -1,6 +1,9 @@
 import unittest
 import os
+import yaml
+import json
 from .InputReader import InputReader
+from .InputProcessor import load_previous_outputs_as_inputs
 
 
 class InputReaderTester(unittest.TestCase):
@@ -80,6 +83,227 @@ class InputReaderTester(unittest.TestCase):
         reader = InputReader(["takedown", "find", "ReactJS Ant Design", "token - xxxxx",
                               "-t", "repo", "abababa", "nonsence"])
         self.assertTrue(reader.prepare())
+
+
+class InputProcessorTester(unittest.TestCase):
+
+    def setUp(self):
+        # define commonly tested samples
+        self.test_sample1 = {
+            "results": [
+                {
+                    "owner__username": "haha_example_name",
+                    "owner__name": "John",
+                    "owner__email": "z@z.com",
+                    "owner__html_url": "https://url.example.com",
+                    "repos": [
+                        {
+                            "repo__name": "ECS150",
+                            "repo__html_url": "https://url.example.ECS150.com",
+                            "status": "New",
+                            "latest_detected_date": "2020-10-25 23:44:47.227048"
+                        },
+                        {
+                            "repo__name": "ECS188",
+                            "repo__html_url": "https://url.example.ECS188.com",
+                            "status": "New",
+                            "latest_detected_date": "2020-10-25 23:44:47.227048"
+                        },
+                        {
+                            "repo__name": "HIS17B",
+                            "repo__html_url": "https://url.example.HIS17B.com",
+                            "status": "Waiting",
+                            "latest_detected_date": "2020-10-21 23:44:47.227048"
+                        }
+                    ]
+                },
+                {
+                    "owner__username": "haha_cat_fish",
+                    "owner__name": None,
+                    "owner__email": None,
+                    "owner__html_url": "https://url.test.com",
+                    "repos": [
+                        {
+                            "repo__name": "pthread",
+                            "repo__html_url": "https://url.example.pthread.com",
+                            "status": "New",
+                            "latest_detected_date": "2020-10-25 23:44:47.227048"
+                        }
+                    ]
+                }
+            ]
+        }
+        self.test_sample1_parsed = {
+            "haha_example_name": {
+                "owner__username": "haha_example_name",
+                "owner__name": "John",
+                "owner__email": "z@z.com",
+                "owner__html_url": "https://url.example.com",
+                "repos": {
+                    "ECS150": {
+                        "repo__name": "ECS150",
+                        "repo__html_url": "https://url.example.ECS150.com",
+                        "status": "New",
+                        "latest_detected_date": "2020-10-25 23:44:47.227048"
+                    },
+                    "ECS188": {
+                        "repo__name": "ECS188",
+                        "repo__html_url": "https://url.example.ECS188.com",
+                        "status": "New",
+                        "latest_detected_date": "2020-10-25 23:44:47.227048"
+                    },
+                    "HIS17B": {
+                        "repo__name": "HIS17B",
+                        "repo__html_url": "https://url.example.HIS17B.com",
+                        "status": "Waiting",
+                        "latest_detected_date": "2020-10-21 23:44:47.227048"
+                    }
+                }
+            },
+            "haha_cat_fish": {
+                "owner__username": "haha_cat_fish",
+                "owner__name": None,
+                "owner__email": None,
+                "owner__html_url": "https://url.test.com",
+                "repos": {
+                    "pthread": {
+                        "repo__name": "pthread",
+                        "repo__html_url": "https://url.example.pthread.com",
+                        "status": "New",
+                        "latest_detected_date": "2020-10-25 23:44:47.227048"
+                    }
+                }
+            }
+        }
+        self.test_sample2 = {
+            "results": [
+                {
+                    "owner__username": "haha_example_name",
+                    "owner__name": "John",
+                    "owner__email": "z@z.com",
+                    "owner__html_url": "https://url.example.com",
+                    "repos": [
+                        {
+                            "repo__name": "HIS17B",
+                            "repo__html_url": "https://url.example.HIS17B.com",
+                            "status": "Waiting",
+                            "latest_detected_date": "2020-10-30 23:44:47.227048"
+                        }
+                    ]
+                },
+                {
+                    "owner__username": "haha_cat_fish",
+                    "owner__name": None,
+                    "owner__email": None,
+                    "owner__html_url": "https://url.test.com",
+                    "repos": [
+                        {
+                            "repo__name": "pthread",
+                            "repo__html_url": "https://url.example.pthread.com",
+                            "status": "New",
+                            "latest_detected_date": "2020-10-21 23:44:47.227048"
+                        }
+                    ]
+                }
+            ]
+        }
+        self.test_sample12_combined_parsed = {
+            "haha_example_name": {
+                "owner__username": "haha_example_name",
+                "owner__name": "John",
+                "owner__email": "z@z.com",
+                "owner__html_url": "https://url.example.com",
+                "repos": {
+                    "ECS150": {
+                        "repo__name": "ECS150",
+                        "repo__html_url": "https://url.example.ECS150.com",
+                        "status": "New",
+                        "latest_detected_date": "2020-10-25 23:44:47.227048"
+                    },
+                    "ECS188": {
+                        "repo__name": "ECS188",
+                        "repo__html_url": "https://url.example.ECS188.com",
+                        "status": "New",
+                        "latest_detected_date": "2020-10-25 23:44:47.227048"
+                    },
+                    "HIS17B": {
+                        "repo__name": "HIS17B",
+                        "repo__html_url": "https://url.example.HIS17B.com",
+                        "status": "Waiting",
+                        "latest_detected_date": "2020-10-30 23:44:47.227048"
+                    }
+                }
+            },
+            "haha_cat_fish": {
+                "owner__username": "haha_cat_fish",
+                "owner__name": None,
+                "owner__email": None,
+                "owner__html_url": "https://url.test.com",
+                "repos": {
+                    "pthread": {
+                        "repo__name": "pthread",
+                        "repo__html_url": "https://url.example.pthread.com",
+                        "status": "New",
+                        "latest_detected_date": "2020-10-25 23:44:47.227048"
+                    }
+                }
+            }
+        }
+
+    def test_single_file__correct_input_yaml(self):
+        # create temp input file for test
+        temp_input_file = open("./input_file1.tempfile", "w+")
+        yaml.dump(self.test_sample1, temp_input_file)
+        temp_input_file.close()
+        # start testing
+        temp_input_file = open("./input_file1.tempfile", "r")
+        previous_record = load_previous_outputs_as_inputs(["./input_file1.tempfile"])
+        temp_input_file.close()
+        self.assertDictEqual(previous_record, self.test_sample1_parsed)
+        # clean up
+        os.remove("./input_file1.tempfile")
+
+    def test_single_file__correct_input_json(self):
+        # create temp input file for test
+        temp_input_file = open("./input_file1.tempfile", "w+")
+        json.dump(self.test_sample1, temp_input_file)
+        temp_input_file.close()
+        # start testing
+        temp_input_file = open("./input_file1.tempfile", "r")
+        previous_record = load_previous_outputs_as_inputs(["./input_file1.tempfile"])
+        temp_input_file.close()
+        self.assertDictEqual(previous_record, self.test_sample1_parsed)
+        # clean up
+        os.remove("./input_file1.tempfile")
+
+    def test_two_files__correct_input_hybrid_sources(self):
+        # create temp input file for test
+        temp_input_file = open("./input_file1.tempfile", "w+")
+        json.dump(self.test_sample1, temp_input_file)
+        temp_input_file.close()
+        temp_input_file = open("./input_file2.tempfile", "w+")
+        yaml.dump(self.test_sample2, temp_input_file)
+        temp_input_file.close()
+
+        # test
+        previous_record = load_previous_outputs_as_inputs(["./input_file1.tempfile", "./input_file2.tempfile"])
+        self.assertDictEqual(previous_record, self.test_sample12_combined_parsed)
+
+        # remove files
+        os.remove("./input_file1.tempfile")
+        os.remove("./input_file2.tempfile")
+
+    def test_single_file__wrong_input(self):
+        # create temp input file for test
+        temp_input_file = open("./input_file1.tempfile", "w+")
+        temp_input_file.write("write some garbage info")
+        temp_input_file.close()
+        # test
+        previous_record = load_previous_outputs_as_inputs(["./input_file1.tempfile"])
+        self.assertDictEqual(previous_record, {})
+
+        # remove files
+        os.remove("./input_file1.tempfile")
 
 
 if __name__ == '__main__':

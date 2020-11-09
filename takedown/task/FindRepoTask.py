@@ -38,17 +38,7 @@ class FindRepoTask(BaseTask):
         self.__token = token
         self.__is_authenticated = True
         self.search_query = search_query
-        if previous_records:
-            # cache username and corresponding repo
-            users_list = previous_records["results"]
-            previous_records_cache = {}
-            for user in users_list:
-                repos = user.pop("repos")
-                user["repos"] = {
-                    repo["repo__name"]: repo for repo in repos
-                }
-                previous_records_cache[user["owner__username"]] = user
-            self.previous_records = previous_records_cache
+        self.previous_records = previous_records
         return self
 
     def __pre_check__(self, ignore_warning: bool = False):
