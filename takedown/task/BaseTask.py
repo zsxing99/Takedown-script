@@ -11,3 +11,10 @@ class BaseTask(ABC):
     def __init__(self, **settings):
         pass
 
+    @abstractmethod
+    def execute(self, **kwargs):
+        pass
+
+    @abstractmethod
+    def prepare(self, **kwargs):
+        pass

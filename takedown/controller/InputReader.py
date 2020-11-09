@@ -49,7 +49,7 @@ class InputReader:
     def __command_find(self):
         """
         Command validator and parser for "takedown find"
-        :return:
+        :return: true if commands are correct; false if failed
         """
         self.command_type = "find"
 
@@ -74,7 +74,7 @@ class InputReader:
                 else:
                     targets = self.raw_input[curr + 1].split("+")
                     for target in targets:
-                        if target not in ["file", "code"]:
+                        if target not in ["repo", "code"]:
                             self.parse_error_msg = "Unrecognized target, check 'help' for details."
                             return False
                     self.optional_inputs["target"] = targets
@@ -100,6 +100,16 @@ class InputReader:
                         self.parse_error_msg = "Output file path '{}' cannot be accessed.".format(file)
                         return False
                     self.optional_inputs["output"] = file
+            elif self.raw_input[curr] == '-f':
+                if curr == length - 1:
+                    self.parse_error_msg = "Missing target after flag '-f'"
+                    return False
+                else:
+                    output_format = self.raw_input[curr + 1]
+                    if output_format not in ["json", "yaml"]:
+                        self.parse_error_msg = "Unrecognized file format. Please check 'help' for details"
+                        return False
+                    self.optional_inputs["format"] = output_format
             else:
                 # skip unrecognized input
                 curr += 1
