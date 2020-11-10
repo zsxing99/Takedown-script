@@ -2,8 +2,10 @@ import unittest
 import os
 import yaml
 import json
+import copy
 from .InputReader import InputReader
 from .InputProcessor import load_previous_outputs_as_inputs
+from .OutputParser import parse_intermediate_results
 
 
 class InputReaderTester(unittest.TestCase):
@@ -304,6 +306,68 @@ class InputProcessorTester(unittest.TestCase):
 
         # remove files
         os.remove("./input_file1.tempfile")
+
+
+class OutputParserTester(unittest.TestCase):
+
+    def setUp(self):
+        # define commonly tested samples
+        self.test_sample1_parsed = {
+            "haha_example_name": {
+                "owner__username": "haha_example_name",
+                "owner__name": "John",
+                "owner__email": "z@z.com",
+                "owner__html_url": "https://url.example.com",
+                "repos": {
+                    "ECS150": {
+                        "repo__name": "ECS150",
+                        "repo__html_url": "https://url.example.ECS150.com",
+                        "status": "New",
+                        "latest_detected_date": "2020-10-25 23:44:47.227048"
+                    },
+                    "ECS188": {
+                        "repo__name": "ECS188",
+                        "repo__html_url": "https://url.example.ECS188.com",
+                        "status": "New",
+                        "latest_detected_date": "2020-10-25 23:44:47.227048"
+                    },
+                    "HIS17B": {
+                        "repo__name": "HIS17B",
+                        "repo__html_url": "https://url.example.HIS17B.com",
+                        "status": "Waiting",
+                        "latest_detected_date": "2020-10-21 23:44:47.227048"
+                    }
+                }
+            },
+            "haha_cat_fish": {
+                "owner__username": "haha_cat_fish",
+                "owner__name": None,
+                "owner__email": None,
+                "owner__html_url": "https://url.test.com",
+                "repos": {
+                    "pthread": {
+                        "repo__name": "pthread",
+                        "repo__html_url": "https://url.example.pthread.com",
+                        "status": "New",
+                        "latest_detected_date": "2020-10-25 23:44:47.227048"
+                    }
+                }
+            }
+        }
+
+    def test_write__to_file_json(self):
+        sample_copy = copy.deepcopy(self.test_sample1_parsed)
+        self.assertTrue(parse_intermediate_results(self.test_sample1_parsed, "json", "./test_sample1.tempfile"))
+        load_result_back = load_previous_outputs_as_inputs(["./test_sample1.tempfile"])
+        self.assertDictEqual(load_result_back, sample_copy)
+        os.remove("./test_sample1.tempfile")
+
+    def test_write__to_file_yaml(self):
+        sample_copy = copy.deepcopy(self.test_sample1_parsed)
+        self.assertTrue(parse_intermediate_results(self.test_sample1_parsed, "yaml", "./test_sample1.tempfile"))
+        load_result_back = load_previous_outputs_as_inputs(["./test_sample1.tempfile"])
+        self.assertDictEqual(load_result_back, sample_copy)
+        os.remove("./test_sample1.tempfile")
 
 
 if __name__ == '__main__':

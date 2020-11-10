@@ -8,6 +8,7 @@ It returns the targets with a set of usernames.
 python >= 3.8
 requests~=2.23.0
 pandas~=1.0.3
+PyYAML~=5.3.1
 ```
 
 A `requirements.txt` is provided, so simply run:
@@ -43,6 +44,8 @@ results = client.authenticate("Your personal GitHub token").search("this is awes
 print(results.get_fields())
 results.generate_list(['owner__login', 'owner__html_url'])
 ```
+
+For more samples, visit `example_scripts` folders.
 
 ### Notes
 For GitHub client to search, there are certain restrictions:
