@@ -23,12 +23,9 @@ There are a simple starter script provided called `main.py` and the entire packa
 #### script
 On command line, run:
 ```
-python main.py your_search_pattern your_GitHub_personal_token
+python takedown.py help
 ```
-As noted, the script is very simple. It is only a starter script. You can customize your own by using
-the `takedown` package.
-
-There aren't too much options the script provides for now, but might be extended.
+to check a list of options
 
 #### package
 There are only GitHub TakeDown implemented now, so here's a piece of sample for you.
