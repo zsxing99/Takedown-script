@@ -39,6 +39,9 @@ class InputReader:
         check semantics
         :return: true if commands are correct; false if failed
         """
+        if len(self.raw_input) <= 1:
+            self.parse_error_msg = "No recognized commands, please check 'help'."
+            return False
         if self.raw_input[1] == "find":
             return self.__command_find()
         elif self.raw_input[1] == "send":
@@ -89,7 +92,6 @@ class InputReader:
                             self.parse_error_msg = "File path '{}' cannot be accessed.".format(file)
                             return False
                     self.optional_inputs["inputs"] = files
-                    self.command_type = "find+compare"
             elif self.raw_input[curr] == '-o':
                 if curr == length - 1:
                     self.parse_error_msg = "Missing target after flag '-o'"
