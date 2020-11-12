@@ -57,8 +57,9 @@ def parse_final_results(final_results: dict, output_format: str, output_path: st
     if not output_path:
         print(text)
     else:
-        with open(output_path, "w+") as file:
-            file.write(text)
+        file = open(output_path, "w+")
+        file.write(text)
+        file.close()
 
     return True
 

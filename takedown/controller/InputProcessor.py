@@ -15,24 +15,30 @@ def load_previous_outputs_as_inputs(file_paths: list) -> dict:
         print("Loading {}...".format(file_path))
         # start reading files
         data = None
-        input_stream = open(file_path)
         # try yaml and json
+        input_stream = None
         try:
+            input_stream = open(file_path)
             data = yaml.safe_load(input_stream)
             print("{} successfully loaded as yaml file.".format(file_path))
+            input_stream.close()
         except yaml.YAMLError:
+            if input_stream:
+                input_stream.close()
             data = None
         if not data:
             try:
+                input_stream = open(file_path)
                 data = json.load(input_stream)
                 print("{} successfully loaded as json file.".format(file_path))
+                input_stream.close()
             except json.JSONDecodeError:
+                if input_stream:
+                    input_stream.close()
                 data = None
         if not data or not isinstance(data, dict):
             print("Loading {} failed both in yaml and json. Skipped.".format(file_path))
-            input_stream.close()
             continue
-        input_stream.close()
 
         # read data into dict and merge data if necessary
         for user_dict in data["results"]:
