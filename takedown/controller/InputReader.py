@@ -5,6 +5,7 @@ Input Reader that checks and distributes commands. For detailed list of command 
 """
 
 import sys
+import os
 
 
 def check_file(file_path, mode="r"):
@@ -12,6 +13,10 @@ def check_file(file_path, mode="r"):
     check if provided file path is able to be accessed
     :return: true if can, false otherwise
     """
+    # in case the file will be overwritten
+    if mode != 'r':
+        if os.path.exists(file_path):
+            return True
     f = None
     try:
         f = open(file_path, mode)
