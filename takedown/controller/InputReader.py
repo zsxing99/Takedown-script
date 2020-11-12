@@ -80,7 +80,7 @@ class InputReader:
                         if target not in ["repo", "code"]:
                             self.parse_error_msg = "Unrecognized target, check 'help' for details."
                             return False
-                    self.optional_inputs["target"] = targets
+                    self.optional_inputs["targets"] = targets
             elif self.raw_input[curr] == '-i':
                 if curr == length - 1:
                     self.parse_error_msg = "Missing target after flag '-i'"
