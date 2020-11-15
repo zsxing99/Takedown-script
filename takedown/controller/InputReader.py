@@ -6,6 +6,7 @@ Input Reader that checks and distributes commands. For detailed list of command 
 
 import sys
 import os
+import configparser
 
 
 def check_file(file_path, mode="r"):
@@ -17,6 +18,9 @@ def check_file(file_path, mode="r"):
     if mode != 'r':
         if os.path.exists(file_path):
             return True
+    else:
+        if not os.path.exists(file_path):
+            return False
     f = None
     try:
         f = open(file_path, mode)
@@ -38,12 +42,103 @@ class InputReader:
         self.command_type = None
         self.required_inputs = {}
         self.optional_inputs = {}
+        self.config_path = None
+
+    def has_config(self):
+        curr = 2
+        length = len(self.raw_input)
+        while curr < length:
+            if self.raw_input[curr] == '-c':
+                if curr == length - 1:
+                    self.parse_error_msg = "Missing target after flag '-c'"
+                else:
+                    print("Config file detected.")
+                    self.config_path = self.raw_input[curr + 1]
+                return True
+            curr += 1
+
+        return False
+
+    def parse_config_file(self):
+        if self.command_type == "find":
+            return self.__parse_config_file_find()
+        elif self.command_type == "send":
+            return self.__command_send()
+        else:
+            self.parse_error_msg = "Unnecessary config file."
+            return False
+
+    def __parse_config_file_find(self):
+        if not self.config_path:
+            return False
+        if not check_file(self.config_path, "r"):
+            self.parse_error_msg = "File path '{}' cannot be found.".format(self.config_path)
+            return False
+        config_reader = configparser.ConfigParser()
+        config_reader.read(self.config_path)
+
+        if 'required parameters' not in config_reader:
+            self.parse_error_msg = "Missing required parameter section in config file."
+            return False
+
+        # check params
+        required_params = config_reader['required parameters']
+
+        # check required
+        if "GitHub_token" in required_params:
+            self.required_inputs["GitHub_token"] = required_params["GitHub_token"]
+        else:
+            self.parse_error_msg = "Missing required parameters. Please refer to 'help' command"
+            return False
+        if "search_query" in required_params:
+            self.required_inputs["search_query"] = required_params["search_query"]
+        else:
+            self.parse_error_msg = "Missing required parameters. Please refer to 'help' command"
+            return False
+
+        optional_params = None
+        # if exists, continue to read
+        if 'optional parameters' in config_reader:
+            optional_params = config_reader['optional parameters']
+        else:
+            return True
+
+        # check optional
+        if "targets" in optional_params:
+            targets = optional_params["targets"].split("+")
+            for target in targets:
+                if target not in ["repo", "code"]:
+                    self.parse_error_msg = "Unrecognized target, check 'help' for details."
+                    return False
+            self.optional_inputs["targets"] = targets
+        if "inputs" in optional_params:
+            files = optional_params["inputs"].split("+")
+            for file in files:
+                if not check_file(file):
+                    self.parse_error_msg = "File path '{}' cannot be accessed.".format(file)
+                    return False
+            self.optional_inputs["inputs"] = files
+        if "output" in optional_params:
+            file = optional_params["output"]
+            if not check_file(file, "w+"):
+                self.parse_error_msg = "Output file path '{}' cannot be accessed.".format(file)
+                return False
+            self.optional_inputs["output"] = file
+        if "format" in optional_params:
+            output_format = optional_params["format"]
+            if output_format not in ["json", "yaml"]:
+                self.parse_error_msg = "Unrecognized file format. Please check 'help' for details"
+                return False
+            self.optional_inputs["format"] = output_format
+
+        return True
 
     def prepare(self):
         """
         check semantics
         :return: true if commands are correct; false if failed
         """
+        # normal parameters
         if len(self.raw_input) <= 1:
             self.parse_error_msg = "No recognized commands, please check 'help'."
             return False
@@ -60,6 +155,10 @@ class InputReader:
         :return: true if commands are correct; false if failed
         """
         self.command_type = "find"
+
+        # check config files
+        if self.has_config():
+            return self.parse_config_file()
 
         # read required input: search_query and GitHub token
         if len(self.raw_input) < 4:
