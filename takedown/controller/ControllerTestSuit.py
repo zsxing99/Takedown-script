@@ -36,7 +36,7 @@ class InputReaderTester(unittest.TestCase):
             "GitHub_token": "token - xxxxx"
         })
         self.assertDictEqual(optional, {
-            "target": ["repo", "code"],
+            "targets": ["repo", "code"],
             "output": temp_output_file
         })
         # remove temp file
@@ -58,7 +58,7 @@ class InputReaderTester(unittest.TestCase):
             "GitHub_token": "token - xxxxx"
         })
         self.assertDictEqual(optional, {
-            "target": ["repo", "code"],
+            "targets": ["repo", "code"],
             "inputs": [input1, input2]
         })
         # remove temp file
@@ -174,6 +174,7 @@ class InputReaderTester(unittest.TestCase):
         self.assertFalse(reader.prepare())
         err_msg = reader.execute()
         self.assertEqual(err_msg, "Missing required parameters. Please refer to 'help' command")
+
 
 class InputProcessorTester(unittest.TestCase):
 
