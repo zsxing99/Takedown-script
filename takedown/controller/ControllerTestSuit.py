@@ -23,7 +23,7 @@ class InputReaderTester(unittest.TestCase):
         reader = InputReader(["takedown", "find", "ReactJS Ant Design", ])
         self.assertEqual(reader.prepare(), False)
         err_msg = reader.execute()
-        self.assertEqual(err_msg, "Missing required parameters. Please refer to 'help' command")
+        self.assertEqual(err_msg, "Missing required parameters. Please refer to 'help' command.")
 
     def test_find_complex_correct_input__with_output(self):
         temp_output_file = "./test_output.tempfile"
