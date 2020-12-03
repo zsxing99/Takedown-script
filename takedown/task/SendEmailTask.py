@@ -115,21 +115,23 @@ class SendEmailTask(BaseTask):
 
             # construct message
             num_of_repos = 0
-            msg = "Hello {},\n".format(user_key)
+            msg = """Subject: GitHub Takedown
+            """
             # more TODO here
 
             if num_of_repos == 0:
                 print("No repo identified as to send message.")
                 continue
-            for email in owner_emails:
-                if not email:
-                    continue
-                try:
-                    self.email_client.sendmail(self.username, email, msg)
-                    print("Message sent to {}".format(email))
-                except Exception as e:
-                    print("Error occurs when sending emails to {}".format(email), file=sys.stderr)
-                    print(str(e), file=sys.stderr)
+
+            owner_emails = list(filter(lambda x: x is not None, owner_emails))
+            failed_sent = None
+            try:
+                failed_sent = self.email_client.sendmail(self.username, owner_emails, msg)
+                for email in failed_sent:
+                    print("Message sent to {} failed, because {}".format(email, str(failed_sent[email])))
+            except Exception as e:
+                print("Error occurs when sending emails to {}".format(",".join(owner_emails)), file=sys.stderr)
+                print(str(e), file=sys.stderr)
 
             # update outputs
 

@@ -7,6 +7,7 @@ Input Reader that checks and distributes commands. For detailed list of command 
 import sys
 import os
 import configparser
+import takedown
 
 
 def check_file(file_path, mode="r"):
@@ -204,7 +205,8 @@ class InputReader:
         """
         # normal parameters
         if len(self.raw_input) <= 1:
-            self.parse_error_msg = "No recognized commands, please check 'help'."
+            self.parse_error_msg = "For usage, please check '{} help'.".format(self.raw_input[0])
+            self.__print_info()
             return False
         if self.raw_input[1] == "find":
             return self.__command_find()
@@ -212,6 +214,12 @@ class InputReader:
             return self.__command_send()
         else:
             return self.__command_help()
+
+    def __print_info(self):
+        print("Takedown version {}".format(takedown.VERSION))
+        print("A python script that allows users to search potential copyright violated information on GitHub and send"
+              "emails taking down those.")
+        print("The project is developed by Zesheng Xing and supervised by Joël Porquet-Lupine at UC Davis, 2020.")
 
     def __command_find(self):
         """
@@ -226,7 +234,7 @@ class InputReader:
 
         # read required input: search_query and GitHub token
         if len(self.raw_input) < 4:
-            self.parse_error_msg = "Missing required parameters. Please refer to 'help' command"
+            self.parse_error_msg = "Missing required parameters. Please refer to 'help' command."
             return False
         else:
             self.required_inputs["search_query"] = self.raw_input[2]
