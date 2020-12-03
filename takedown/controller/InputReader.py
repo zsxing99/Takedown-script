@@ -63,7 +63,7 @@ class InputReader:
         if self.command_type == "find":
             return self.__parse_config_file_find()
         elif self.command_type == "send":
-            return self.__command_send()
+            return self.__parse_config_file_send()
         else:
             self.parse_error_msg = "Unnecessary config file."
             return False
@@ -130,6 +130,70 @@ class InputReader:
                 self.parse_error_msg = "Unrecognized file format. Please check 'help' for details"
                 return False
             self.optional_inputs["format"] = output_format
+
+        return True
+
+    def __parse_config_file_send(self):
+        if not self.config_path:
+            return False
+        if not check_file(self.config_path, "r"):
+            self.parse_error_msg = "File path '{}' cannot be found.".format(self.config_path)
+            return False
+        config_reader = configparser.ConfigParser()
+        config_reader.read(self.config_path)
+
+        if 'required parameters' not in config_reader:
+            self.parse_error_msg = "Missing required parameter section in config file."
+            return False
+
+        # check params
+        required_params = config_reader['required parameters']
+
+        # check required
+        if "domain" in required_params:
+            self.required_inputs["domain"] = required_params["domain"]
+        else:
+            self.parse_error_msg = "Missing required parameters. Please refer to 'help' command"
+            return False
+        if "port" in required_params:
+            self.required_inputs["port"] = required_params["port"]
+        else:
+            self.parse_error_msg = "Missing required parameters. Please refer to 'help' command"
+            return False
+        if "inputs" in required_params:
+            inputs = required_params["inputs"].split("+")
+            for input_file in inputs:
+                if not check_file(input_file):
+                    self.parse_error_msg = "Input file: {} cannot be accessed.".format(input_file)
+                    return False
+            self.required_inputs["port"] = inputs
+        else:
+            self.parse_error_msg = "Missing required parameters. Please refer to 'help' command"
+            return False
+
+        optional_params = None
+        # if exists, continue to read
+        if 'optional parameters' in config_reader:
+            optional_params = config_reader['optional parameters']
+        else:
+            return True
+
+        # check optional
+        if "username" in optional_params:
+            username = optional_params["username"]
+            self.optional_inputs["username"] = username
+        if "password" in optional_params:
+            password = optional_params["password"]
+            self.optional_inputs["password"] = password
+        if "secure_method" in optional_params:
+            secure_method = optional_params["secure_method"]
+            if not secure_method.lower() in ['tls', 'ssl']:
+                self.parse_error_msg = "Secure method unknown."
+                return False
+            self.optional_inputs["secure_method"] = secure_method
+        if "tags" in optional_params:
+            tags = optional_params["tags"].split("+")
+            self.optional_inputs["tags"] = tags
 
         return True
 
@@ -231,7 +295,73 @@ class InputReader:
         :return:
         """
         self.command_type = "send"
-        pass
+
+        # check config files
+        if self.has_config():
+            return self.parse_config_file()
+
+        # read required input: search_query and GitHub token
+        if len(self.raw_input) < 5:
+            self.parse_error_msg = "Missing required parameters. Please refer to 'help' command"
+            return False
+        else:
+            self.required_inputs["domain"] = self.raw_input[2]
+            self.required_inputs["port"] = self.raw_input[3]
+            inputs = self.raw_input[4].split("+")
+            for input_file in inputs:
+                if not check_file(input_file):
+                    self.parse_error_msg = "Input file: {} cannot be accessed.".format(input_file)
+                    return False
+            self.required_inputs["inputs"] = inputs
+            print("Checked required parameters.")
+
+            # keep reading optional parameters
+            length = len(self.raw_input)
+            curr = 5
+            while curr < length:
+                # -u username
+                if self.raw_input[curr] == '-u':
+                    if curr == length - 1:
+                        self.parse_error_msg = "Missing target after flag '-u'"
+                        return False
+                    else:
+                        username = self.raw_input[curr + 1]
+                        self.optional_inputs["username"] = username
+                # -p password
+                elif self.raw_input[curr] == '-p':
+                    if curr == length - 1:
+                        self.parse_error_msg = "Missing target after flag '-p'"
+                        return False
+                    else:
+                        password = self.raw_input[curr + 1]
+                        self.optional_inputs["password"] = password
+                # -s secure method
+                elif self.raw_input[curr] == '-s':
+                    if curr == length - 1:
+                        self.parse_error_msg = "Missing target after flag '-s'"
+                        return False
+                    else:
+                        secure_method = self.raw_input[curr + 1]
+                        if not secure_method.lower() in ['tls', 'ssl']:
+                            self.parse_error_msg = "Secure method unknown."
+                            return False
+                        self.optional_inputs["secure_method"] = secure_method
+                # -t tags
+                elif self.raw_input[curr] == '-t':
+                    if curr == length - 1:
+                        self.parse_error_msg = "Missing target after flag '-t'"
+                        return False
+                    else:
+                        tags = self.raw_input[curr + 1].split("+")
+                        self.optional_inputs["tags"] = tags
+                else:
+                    # skip unrecognized input
+                    curr += 1
+                    continue
+                curr += 2
+
+            print("Checked optional parameters.")
+            return True
 
     def __command_help(self):
         """
