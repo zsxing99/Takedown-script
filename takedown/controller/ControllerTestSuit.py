@@ -23,7 +23,7 @@ class InputReaderTester(unittest.TestCase):
         reader = InputReader(["takedown", "find", "ReactJS Ant Design", ])
         self.assertEqual(reader.prepare(), False)
         err_msg = reader.execute()
-        self.assertEqual(err_msg, "Missing required parameters. Please refer to 'help' command")
+        self.assertEqual(err_msg, "Missing required parameters. Please refer to 'help' command.")
 
     def test_find_complex_correct_input__with_output(self):
         temp_output_file = "./test_output.tempfile"
@@ -36,7 +36,7 @@ class InputReaderTester(unittest.TestCase):
             "GitHub_token": "token - xxxxx"
         })
         self.assertDictEqual(optional, {
-            "target": ["repo", "code"],
+            "targets": ["repo", "code"],
             "output": temp_output_file
         })
         # remove temp file
@@ -58,7 +58,7 @@ class InputReaderTester(unittest.TestCase):
             "GitHub_token": "token - xxxxx"
         })
         self.assertDictEqual(optional, {
-            "target": ["repo", "code"],
+            "targets": ["repo", "code"],
             "inputs": [input1, input2]
         })
         # remove temp file
@@ -85,6 +85,95 @@ class InputReaderTester(unittest.TestCase):
         reader = InputReader(["takedown", "find", "ReactJS Ant Design", "token - xxxxx",
                               "-t", "repo", "abababa", "nonsence"])
         self.assertTrue(reader.prepare())
+
+    def test_send_simple_correct_input(self):
+        input1 = "temp_input.json"
+        f1 = open(input1, "w+")
+        f1.close()
+        reader = InputReader(["takedown", "send", "www.google.com", "589", input1])
+        self.assertTrue(reader.prepare())
+        required, optional = reader.execute()
+        self.assertDictEqual(required, {
+            "domain": "www.google.com",
+            "port": "589",
+            "inputs": [input1]
+        })
+        # remove temp file
+        os.remove(input1)
+
+    def test_send_simple_correct_input__with_multi_inputs_files(self):
+        input1 = "temp_input.json"
+        input2 = "tenp_input2.json"
+        f1 = open(input1, "w+")
+        f1.close()
+        f1 = open(input2, "w+")
+        f1.close()
+        reader = InputReader(["takedown", "send", "www.google.com", "589", input1 + "+" + input2])
+        self.assertTrue(reader.prepare())
+        required, optional = reader.execute()
+        self.assertDictEqual(required, {
+            "domain": "www.google.com",
+            "port": "589",
+            "inputs": [input1, input2]
+        })
+        # remove temp file
+        os.remove(input1)
+        os.remove(input2)
+
+    def test_send_correct_input__with_optional(self):
+        input1 = "temp_input.json"
+        input2 = "tenp_input2.json"
+        f1 = open(input1, "w+")
+        f1.close()
+        f1 = open(input2, "w+")
+        f1.close()
+        reader = InputReader(["takedown", "send", "www.google.com", "589", input1 + "+" + input2,
+                              "-u", "user", "-p", "pass", "-s", "TlS", "-t", "Detected+Waiting"])
+        self.assertTrue(reader.prepare())
+        required, optional = reader.execute()
+        self.assertDictEqual(required, {
+            "domain": "www.google.com",
+            "port": "589",
+            "inputs": [input1, input2]
+        })
+        self.assertDictEqual(optional, {
+            "username": "user",
+            "password": "pass",
+            "secure_method": "TlS",
+            "tags": ["Detected", "Waiting"]
+        })
+        # remove temp file
+        os.remove(input1)
+        os.remove(input2)
+
+    def test_send_simple_wrong_input__with_multi_inputs_files(self):
+        input1 = "temp_input.json"
+        input2 = "tenp_input2.json"
+        f1 = open(input1, "w+")
+        f1.close()
+        reader = InputReader(["takedown", "send", "www.google.com", "589", input1 + "+" + input2])
+        self.assertFalse(reader.prepare())
+        err_msg = reader.execute()
+        self.assertEqual(err_msg, "Input file: {} cannot be accessed.".format(input2))
+        # remove temp file
+        os.remove(input1)
+
+    def test_send_wrong_input__with_wrong_secure_method(self):
+        input1 = "temp_input.json"
+        f1 = open(input1, "w+")
+        f1.close()
+        reader = InputReader(["takedown", "send", "www.google.com", "589", input1, "-s", "sha526"])
+        self.assertFalse(reader.prepare())
+        err_msg = reader.execute()
+        self.assertEqual(err_msg, "Secure method unknown.")
+        # remove temp file
+        os.remove(input1)
+
+    def test_send_wrong_input__with_less_argcs(self):
+        reader = InputReader(["takedown", "send", "www.google.com", ])
+        self.assertFalse(reader.prepare())
+        err_msg = reader.execute()
+        self.assertEqual(err_msg, "Missing required parameters. Please refer to 'help' command")
 
 
 class InputProcessorTester(unittest.TestCase):

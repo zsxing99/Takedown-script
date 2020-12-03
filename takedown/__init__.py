@@ -10,3 +10,4 @@ This Python project is to help people search on some client hosting contents tha
 from . import controller
 from . import client
 
+VERSION = "0.0.2"
