@@ -34,8 +34,11 @@ class MainController:
         # processor
         if "inputs" in optional_params:
             previous_records = load_previous_outputs_as_inputs(optional_params["inputs"])
-            if len(previous_records) > 0:
-                optional_params["inputs"] = previous_records
+            optional_params["inputs"] = previous_records
+
+        if "inputs" in required_params:
+            previous_records = load_previous_outputs_as_inputs(required_params["inputs"])
+            required_params["inputs"] = previous_records
 
         # executor
         executor = TaskExecutor()

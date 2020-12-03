@@ -166,7 +166,7 @@ class InputReader:
                 if not check_file(input_file):
                     self.parse_error_msg = "Input file: {} cannot be accessed.".format(input_file)
                     return False
-            self.required_inputs["port"] = inputs
+            self.required_inputs["inputs"] = inputs
         else:
             self.parse_error_msg = "Missing required parameters. Please refer to 'help' command"
             return False

@@ -7,7 +7,6 @@ It returns the targets with a set of usernames.
 ```
 python >= 3.8
 requests~=2.23.0
-pandas~=1.0.3
 PyYAML~=5.3.1
 ```
 
@@ -18,7 +17,7 @@ pip install -r requirements.txt
 So all dependencies will be added. Of course you should have `pip` installed.
 
 ### Usage
-There are a simple starter script provided called `main.py` and the entire package called `takedown`.
+There are a program provided called `takedown.py` and the entire package called `takedown`.
 
 #### script
 On command line, run:
