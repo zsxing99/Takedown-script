@@ -207,6 +207,24 @@ class InputReader:
                 self.parse_error_msg = "Unrecognized file format. Please check 'help' for details"
                 return False
             self.optional_inputs["format"] = output_format
+        if "email_name" in optional_params:
+            email_name = optional_params["email_name"]
+            self.optional_inputs["name"] = email_name
+        if "email_subject" in optional_params:
+            email_subject = optional_params["email_subject"]
+            self.optional_inputs["subject"] = email_subject
+        if "email_preface" in optional_params:
+            email_preface = optional_params["email_preface"]
+            if email_preface.count("{}") != 1:
+                self.parse_error_msg = "Incorrect format of preface entered."
+                return False
+            self.optional_inputs["preface"] = email_preface
+        if "email_ending" in optional_params:
+            email_ending = optional_params["email_ending"]
+            if email_ending.count("{}") != 1:
+                self.parse_error_msg = "Incorrect format of ending entered."
+                return False
+            self.optional_inputs["ending"] = email_ending
 
         return True
 
@@ -394,6 +412,44 @@ class InputReader:
                             self.parse_error_msg = "Unrecognized file format. Please check 'help' for details"
                             return False
                         self.optional_inputs["format"] = output_format
+                # -en name
+                elif self.raw_input[curr] == '-en':
+                    if curr == length - 1:
+                        self.parse_error_msg = "Missing target after flag '-en'"
+                        return False
+                    else:
+                        name = self.raw_input[curr + 1]
+                        self.optional_inputs["name"] = name
+                # -es subject
+                elif self.raw_input[curr] == '-es':
+                    if curr == length - 1:
+                        self.parse_error_msg = "Missing target after flag '-es'"
+                        return False
+                    else:
+                        subject = self.raw_input[curr + 1]
+                        self.optional_inputs["subject"] = subject
+                # -ep preface
+                elif self.raw_input[curr] == '-ep':
+                    if curr == length - 1:
+                        self.parse_error_msg = "Missing target after flag '-ep'"
+                        return False
+                    else:
+                        preface = self.raw_input[curr + 1]
+                        if preface.count("{}") != 1:
+                            self.parse_error_msg = "Incorrect format of preface entered."
+                            return False
+                        self.optional_inputs["preface"] = preface
+                # -ee ending
+                elif self.raw_input[curr] == '-ee':
+                    if curr == length - 1:
+                        self.parse_error_msg = "Missing target after flag '-ee'"
+                        return False
+                    else:
+                        ending = self.raw_input[curr + 1]
+                        if ending.count("{}") != 1:
+                            self.parse_error_msg = "Incorrect format of ending entered."
+                            return False
+                        self.optional_inputs["ending"] = ending
                 else:
                     # skip unrecognized input
                     curr += 1
