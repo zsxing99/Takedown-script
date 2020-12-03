@@ -195,6 +195,18 @@ class InputReader:
         if "tags" in optional_params:
             tags = optional_params["tags"].split("+")
             self.optional_inputs["tags"] = tags
+        if "output" in optional_params:
+            file = optional_params["output"]
+            if not check_file(file, "w+"):
+                self.parse_error_msg = "Output file path '{}' cannot be accessed.".format(file)
+                return False
+            self.optional_inputs["output"] = file
+        if "format" in optional_params:
+            output_format = optional_params["format"]
+            if output_format not in ["json", "yaml"]:
+                self.parse_error_msg = "Unrecognized file format. Please check 'help' for details"
+                return False
+            self.optional_inputs["format"] = output_format
 
         return True
 
@@ -362,6 +374,26 @@ class InputReader:
                     else:
                         tags = self.raw_input[curr + 1].split("+")
                         self.optional_inputs["tags"] = tags
+                elif self.raw_input[curr] == '-o':
+                    if curr == length - 1:
+                        self.parse_error_msg = "Missing target after flag '-o'"
+                        return False
+                    else:
+                        file = self.raw_input[curr + 1]
+                        if not check_file(file, "w+"):
+                            self.parse_error_msg = "Output file path '{}' cannot be accessed.".format(file)
+                            return False
+                        self.optional_inputs["output"] = file
+                elif self.raw_input[curr] == '-f':
+                    if curr == length - 1:
+                        self.parse_error_msg = "Missing target after flag '-f'"
+                        return False
+                    else:
+                        output_format = self.raw_input[curr + 1]
+                        if output_format not in ["json", "yaml"]:
+                            self.parse_error_msg = "Unrecognized file format. Please check 'help' for details"
+                            return False
+                        self.optional_inputs["format"] = output_format
                 else:
                     # skip unrecognized input
                     curr += 1
