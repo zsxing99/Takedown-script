@@ -167,6 +167,10 @@ class SendEmailTask(BaseTask):
                     continue
                 repo_list.append("<li><a href='{}'>{}</a></li>".format(repo["repo__html_url"], repo["repo__name"]))
                 # update repo status
+                repo["history"].append({
+                    "status": repo["status"],
+                    "date": repo["date"]
+                })
                 repo["status"] = "Waiting"
                 repo["date"] = datetime.datetime.now()
 

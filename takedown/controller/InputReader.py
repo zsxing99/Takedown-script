@@ -463,7 +463,9 @@ class InputReader:
         Command parser for help
         :return:
         """
-        pass
+        print(takedown.USAGE)
+        self.parse_error_msg = "For more information and future update, please check documents or README file."
+        return False
 
     def execute(self):
         """
