@@ -173,12 +173,15 @@ class SendEmailTask(BaseTask):
                 num_of_repos += 1
 
             if num_of_repos == 0:
-                print("No repo identified as to send message for this target.")
+                print("No repo identified as to send message for this target. Skipped")
                 continue
 
             msg.attach(MIMEText(html.format(preface.format(user_key), "".join(repo_list), ending.format(name)), 'html'))
 
             owner_emails = list(filter(lambda x: x is not None, owner_emails))
+            if len(owner_emails) == 0:
+                print("No emails associated with this record. Skipped")
+                continue
             failed_sent = None
             try:
                 failed_sent = self.email_client.sendmail(self.username, owner_emails, msg.as_string())
