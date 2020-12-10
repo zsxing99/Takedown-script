@@ -192,19 +192,19 @@ class InputProcessorTester(unittest.TestCase):
                             "repo__name": "ECS150",
                             "repo__html_url": "https://url.example.ECS150.com",
                             "status": "New",
-                            "latest_detected_date": "2020-10-25 23:44:47.227048"
+                            "date": "2020-10-25 23:44:47.227048"
                         },
                         {
                             "repo__name": "ECS188",
                             "repo__html_url": "https://url.example.ECS188.com",
                             "status": "New",
-                            "latest_detected_date": "2020-10-25 23:44:47.227048"
+                            "date": "2020-10-25 23:44:47.227048"
                         },
                         {
                             "repo__name": "HIS17B",
                             "repo__html_url": "https://url.example.HIS17B.com",
                             "status": "Waiting",
-                            "latest_detected_date": "2020-10-21 23:44:47.227048"
+                            "date": "2020-10-21 23:44:47.227048"
                         }
                     ]
                 },
@@ -218,7 +218,7 @@ class InputProcessorTester(unittest.TestCase):
                             "repo__name": "pthread",
                             "repo__html_url": "https://url.example.pthread.com",
                             "status": "New",
-                            "latest_detected_date": "2020-10-25 23:44:47.227048"
+                            "date": "2020-10-25 23:44:47.227048"
                         }
                     ]
                 }
@@ -235,19 +235,19 @@ class InputProcessorTester(unittest.TestCase):
                         "repo__name": "ECS150",
                         "repo__html_url": "https://url.example.ECS150.com",
                         "status": "New",
-                        "latest_detected_date": "2020-10-25 23:44:47.227048"
+                        "date": "2020-10-25 23:44:47.227048"
                     },
                     "ECS188": {
                         "repo__name": "ECS188",
                         "repo__html_url": "https://url.example.ECS188.com",
                         "status": "New",
-                        "latest_detected_date": "2020-10-25 23:44:47.227048"
+                        "date": "2020-10-25 23:44:47.227048"
                     },
                     "HIS17B": {
                         "repo__name": "HIS17B",
                         "repo__html_url": "https://url.example.HIS17B.com",
                         "status": "Waiting",
-                        "latest_detected_date": "2020-10-21 23:44:47.227048"
+                        "date": "2020-10-21 23:44:47.227048"
                     }
                 }
             },
@@ -261,7 +261,7 @@ class InputProcessorTester(unittest.TestCase):
                         "repo__name": "pthread",
                         "repo__html_url": "https://url.example.pthread.com",
                         "status": "New",
-                        "latest_detected_date": "2020-10-25 23:44:47.227048"
+                        "date": "2020-10-25 23:44:47.227048"
                     }
                 }
             }
@@ -278,7 +278,7 @@ class InputProcessorTester(unittest.TestCase):
                             "repo__name": "HIS17B",
                             "repo__html_url": "https://url.example.HIS17B.com",
                             "status": "Waiting",
-                            "latest_detected_date": "2020-10-30 23:44:47.227048"
+                            "date": "2020-10-30 23:44:47.227048"
                         }
                     ]
                 },
@@ -292,7 +292,7 @@ class InputProcessorTester(unittest.TestCase):
                             "repo__name": "pthread",
                             "repo__html_url": "https://url.example.pthread.com",
                             "status": "New",
-                            "latest_detected_date": "2020-10-21 23:44:47.227048"
+                            "date": "2020-10-21 23:44:47.227048"
                         }
                     ]
                 }
@@ -309,19 +309,19 @@ class InputProcessorTester(unittest.TestCase):
                         "repo__name": "ECS150",
                         "repo__html_url": "https://url.example.ECS150.com",
                         "status": "New",
-                        "latest_detected_date": "2020-10-25 23:44:47.227048"
+                        "date": "2020-10-25 23:44:47.227048"
                     },
                     "ECS188": {
                         "repo__name": "ECS188",
                         "repo__html_url": "https://url.example.ECS188.com",
                         "status": "New",
-                        "latest_detected_date": "2020-10-25 23:44:47.227048"
+                        "date": "2020-10-25 23:44:47.227048"
                     },
                     "HIS17B": {
                         "repo__name": "HIS17B",
                         "repo__html_url": "https://url.example.HIS17B.com",
                         "status": "Waiting",
-                        "latest_detected_date": "2020-10-30 23:44:47.227048"
+                        "date": "2020-10-30 23:44:47.227048"
                     }
                 }
             },
@@ -335,7 +335,7 @@ class InputProcessorTester(unittest.TestCase):
                         "repo__name": "pthread",
                         "repo__html_url": "https://url.example.pthread.com",
                         "status": "New",
-                        "latest_detected_date": "2020-10-25 23:44:47.227048"
+                        "date": "2020-10-25 23:44:47.227048"
                     }
                 }
             }
@@ -412,19 +412,19 @@ class OutputParserTester(unittest.TestCase):
                         "repo__name": "ECS150",
                         "repo__html_url": "https://url.example.ECS150.com",
                         "status": "New",
-                        "latest_detected_date": "2020-10-25 23:44:47.227048"
+                        "date": "2020-10-25 23:44:47.227048"
                     },
                     "ECS188": {
                         "repo__name": "ECS188",
                         "repo__html_url": "https://url.example.ECS188.com",
                         "status": "New",
-                        "latest_detected_date": "2020-10-25 23:44:47.227048"
+                        "date": "2020-10-25 23:44:47.227048"
                     },
                     "HIS17B": {
                         "repo__name": "HIS17B",
                         "repo__html_url": "https://url.example.HIS17B.com",
                         "status": "Waiting",
-                        "latest_detected_date": "2020-10-21 23:44:47.227048"
+                        "date": "2020-10-21 23:44:47.227048"
                     }
                 }
             },
@@ -438,7 +438,7 @@ class OutputParserTester(unittest.TestCase):
                         "repo__name": "pthread",
                         "repo__html_url": "https://url.example.pthread.com",
                         "status": "New",
-                        "latest_detected_date": "2020-10-25 23:44:47.227048"
+                        "date": "2020-10-25 23:44:47.227048"
                     }
                 }
             }

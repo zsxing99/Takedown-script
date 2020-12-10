@@ -247,9 +247,8 @@ class InputReader:
 
     def __print_info(self):
         print("Takedown version {}".format(takedown.VERSION))
-        print("A python script that allows users to search potential copyright violated information on GitHub and send"
-              "emails taking down those.")
-        print("The project is developed by Zesheng Xing and supervised by Joël Porquet-Lupine at UC Davis, 2020.")
+        print(takedown.DESCRIPTION)
+        print(takedown.CONTRIBUTORS_INFO)
 
     def __command_find(self):
         """
@@ -464,7 +463,9 @@ class InputReader:
         Command parser for help
         :return:
         """
-        pass
+        print(takedown.USAGE)
+        self.parse_error_msg = "For more information and future update, please check documents or README file."
+        return False
 
     def execute(self):
         """

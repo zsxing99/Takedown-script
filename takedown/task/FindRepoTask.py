@@ -145,28 +145,43 @@ class FindRepoTask(BaseTask):
                 repos = final_result_dict[result["owner__username"]]["repos"]
                 # if repo already exist
                 if result["repo__name"] in repos:
-                    repos[result["repo__name"]]["status"] = "Re-detected"
-                    repos[result["repo__name"]]["latest_detected_date"] = str(datetime.datetime.now())
+                    # update history
+                    repos[result["repo__name"]]["history"].append(
+                        {
+                            "date": repos[result["repo__name"]]["date"],
+                            "status": repos[result["repo__name"]]["status"]
+                        }
+                    )
+                    repos[result["repo__name"]]["status"] = "Redetected"
+                    repos[result["repo__name"]]["date"] = str(datetime.datetime.now())
                 else:
                     repos[result["repo__name"]] = {
                         "repo__name": result["repo__name"],
                         "repo__html_url": result["repo__html_url"],
                         "status": "New",
-                        "latest_detected_date": str(datetime.datetime.now())
+                        "date": str(datetime.datetime.now()),
+                        "history": []
                     }
             elif self.previous_records and result["owner__username"] in self.previous_records:
                 previous_record = self.previous_records[result["owner__username"]]
                 repos = previous_record["repos"]
                 # if repo already exist
                 if result["repo__name"] in repos:
-                    repos[result["repo__name"]]["status"] = "Re-detected"
-                    repos[result["repo__name"]]["latest_detected_date"] = str(datetime.datetime.now())
+                    repos[result["repo__name"]]["history"].append(
+                        {
+                            "date": repos[result["repo__name"]]["date"],
+                            "status": repos[result["repo__name"]]["status"]
+                        }
+                    )
+                    repos[result["repo__name"]]["status"] = "Redetected"
+                    repos[result["repo__name"]]["date"] = str(datetime.datetime.now())
                 else:
                     repos[result["repo__name"]] = {
                         "repo__name": result["repo__name"],
                         "repo__html_url": result["repo__html_url"],
                         "status": "New",
-                        "latest_detected_date": str(datetime.datetime.now())
+                        "date": str(datetime.datetime.now()),
+                        "history": []
                     }
                 final_result_dict[result["owner__username"]] = previous_record
             else:
@@ -180,7 +195,8 @@ class FindRepoTask(BaseTask):
                             "repo__name": result["repo__name"],
                             "repo__html_url": result["repo__html_url"],
                             "status": "New",
-                            "latest_detected_date": str(datetime.datetime.now())
+                            "date": str(datetime.datetime.now()),
+                            "history": []
                         }
                     }
                 }
@@ -281,28 +297,42 @@ class FindRepoTask(BaseTask):
                 repos = final_result_dict[result["owner__username"]]["repos"]
                 # if repo already exist
                 if result["repo__name"] in repos:
-                    repos[result["repo__name"]]["status"] = "Re-detected"
-                    repos[result["repo__name"]]["latest_detected_date"] = str(datetime.datetime.now())
+                    repos[result["repo__name"]]["history"].append(
+                        {
+                            "date": repos[result["repo__name"]]["date"],
+                            "status": repos[result["repo__name"]]["status"]
+                        }
+                    )
+                    repos[result["repo__name"]]["status"] = "Redetected"
+                    repos[result["repo__name"]]["date"] = str(datetime.datetime.now())
                 else:
                     repos[result["repo__name"]] = {
                         "repo__name": result["repo__name"],
                         "repo__html_url": result["repo__html_url"],
                         "status": "New",
-                        "latest_detected_date": str(datetime.datetime.now())
+                        "date": str(datetime.datetime.now()),
+                        "history": []
                     }
             elif self.previous_records and result["owner__username"] in self.previous_records:
                 previous_record = self.previous_records[result["owner__username"]]
                 repos = previous_record["repos"]
                 # if repo already exist
                 if result["repo__name"] in repos:
-                    repos[result["repo__name"]]["status"] = "Re-detected"
-                    repos[result["repo__name"]]["latest_detected_date"] = str(datetime.datetime.now())
+                    repos[result["repo__name"]]["history"].append(
+                        {
+                            "date": repos[result["repo__name"]]["date"],
+                            "status": repos[result["repo__name"]]["status"]
+                        }
+                    )
+                    repos[result["repo__name"]]["status"] = "Redetected"
+                    repos[result["repo__name"]]["date"] = str(datetime.datetime.now())
                 else:
                     repos[result["repo__name"]] = {
                         "repo__name": result["repo__name"],
                         "repo__html_url": result["repo__html_url"],
                         "status": "New",
-                        "latest_detected_date": str(datetime.datetime.now())
+                        "date": str(datetime.datetime.now()),
+                        "history": []
                     }
                 final_result_dict[result["owner__username"]] = previous_record
             else:
@@ -316,7 +346,8 @@ class FindRepoTask(BaseTask):
                             "repo__name": result["repo__name"],
                             "repo__html_url": result["repo__html_url"],
                             "status": "New",
-                            "latest_detected_date": str(datetime.datetime.now())
+                            "date": str(datetime.datetime.now()),
+                            "history": []
                         }
                     }
                 }
@@ -365,7 +396,7 @@ class FindRepoTask(BaseTask):
                             cache_set.add("{}/{}".format(record, repo_name))
                 else:
                     cache_user[record] = len(processed_results)
-                    repos = curr.pop("repos")
+                    repos = curr.get("repos")
                     processed_results.append(
                         {
                             **curr,
