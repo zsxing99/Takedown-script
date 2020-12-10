@@ -168,7 +168,7 @@ class SendEmailTask(BaseTask):
                 repo_list.append("<li><a href='{}'>{}</a></li>".format(repo["repo__html_url"], repo["repo__name"]))
                 # update repo status
                 repo["status"] = "Waiting"
-                repo["latest_detected_date"] = datetime.datetime.now()
+                repo["date"] = datetime.datetime.now()
 
                 num_of_repos += 1
 

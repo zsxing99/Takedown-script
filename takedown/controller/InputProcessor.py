@@ -49,10 +49,10 @@ def load_previous_outputs_as_inputs(file_paths: list) -> dict:
                     # update to the latest scanned ones
                     repo_name = repo_object["repo__name"]
                     if repo_name in to_merge_user_object["repos"]:
-                        if repo_object["latest_detected_date"] > \
-                                to_merge_user_object["repos"][repo_name]["latest_detected_date"]:
-                            to_merge_user_object["repos"][repo_name]["latest_detected_date"] = \
-                                repo_object["latest_detected_date"]
+                        if repo_object["date"] > \
+                                to_merge_user_object["repos"][repo_name]["date"]:
+                            to_merge_user_object["repos"][repo_name]["date"] = \
+                                repo_object["date"]
                             to_merge_user_object["repos"][repo_name]["status"] = repo_object["status"]
                     # or add the repos if no collision
                     else:
