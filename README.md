@@ -19,12 +19,9 @@ So all dependencies will be added. Of course you should have `pip` installed.
 ### Usage
 There are a program provided called `takedown.py` and the entire package called `takedown`.
 
-#### script
-On command line, run:
-```
-python takedown.py help
-```
-to check a list of options
+#### software 
+
+In developing...
 
 #### package
 There are only GitHub TakeDown implemented now, so here's a piece of sample for you.

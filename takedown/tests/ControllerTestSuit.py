@@ -3,9 +3,9 @@ import os
 import yaml
 import json
 import copy
-from .InputReader import InputReader
-from .InputProcessor import load_previous_outputs_as_inputs
-from .OutputParser import parse_intermediate_results
+from takedown.controller.InputReader import InputReader
+from takedown.controller.InputProcessor import load_previous_outputs_as_inputs
+from takedown.controller.OutputParser import parse_intermediate_results
 
 
 class InputReaderTester(unittest.TestCase):
