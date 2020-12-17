@@ -16,15 +16,24 @@ pip install -r requirements.txt
 ```
 So all dependencies will be added. Of course you should have `pip` installed.
 
-### Usage
-There are a program provided called `takedown.py` and the entire package called `takedown`.
+### Install
 
-#### script
-On command line, run:
+Simply clone this repo and run
 ```
-python takedown.py help
+pip install -e .
 ```
-to check a list of options
+
+Or install it from PyPi
+```
+pip install takedown
+```
+
+### Usage
+There are a program provided called `takedown` and the entire package called `takedown`.
+
+#### software 
+
+After installing the package, run `takedown` in command line.
 
 #### package
 There are only GitHub TakeDown implemented now, so here's a piece of sample for you.
