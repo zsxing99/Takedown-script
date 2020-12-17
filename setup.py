@@ -27,5 +27,10 @@ setuptools.setup(
     project_urls={
         "GitHub": "https://github.com/zsxing99/Takedown-script",
         "GitLab": "https://gitlab.com/luplab/luptakedown"
-    }
+    },
+    entry_points={
+        'console_scripts': [
+            'takedown = takedown.takedown:main'
+        ]
+    },
 )
