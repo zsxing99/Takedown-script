@@ -24,6 +24,9 @@ pip install -e .
 ```
 
 Or install it from PyPi
+```
+pip install takedown
+```
 
 ### Usage
 There are a program provided called `takedown` and the entire package called `takedown`.
