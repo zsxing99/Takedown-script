@@ -5,7 +5,7 @@ It returns the targets with a set of usernames.
 
 ### Requirements
 ```
-python >= 3.8
+python >= 3.5
 requests~=2.23.0
 PyYAML~=5.3.1
 ```
