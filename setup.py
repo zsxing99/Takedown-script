@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="takedown",
-    version="0.1.0",
+    version="0.1.1",
     author="Zesheng Xing",
     author_email="zsxing@ucdavis.edu",
     description="A simple python script/package that allows users to search potential copyright violated information "
@@ -19,7 +19,7 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.8',
+    python_requires='>=3.5',
     install_requires=[
         "requests~=2.23.0",
         "PyYAML~=5.3.1"
